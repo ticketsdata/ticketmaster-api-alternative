@@ -118,9 +118,11 @@ Here’s a **realistic Ticketmaster event response** (demo only):
 ---
 
 ## 🔑 Getting Started
-1. Sign up at [ticketsdata.com](https://ticketsdata.com)  
-2. Get your API key  
-3. Make your first request in under 60 seconds  
+
+1. **Sign up** at [ticketsdata.com](https://ticketsdata.com)  
+2. **Choose your plan and subscribe** → Starter, Pro, Business, or Enterprise  
+3. **Get your API key** instantly from your dashboard  
+4. **Make your first request in under 60 seconds**
 
 ---
 
