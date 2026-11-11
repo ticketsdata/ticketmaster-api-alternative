@@ -1,137 +1,197 @@
-# 🎟️ Ticketmaster API Alternative
+# TicketsData API: Unofficial Ticketmaster API Alternative
 
-**Unofficial Ticketmaster API alternative** for developers who need real-time event & ticket data without CAPTCHAs, IP blocks, or strict rate limits.  
-Powered by [TicketsData.com](https://ticketsdata.com).
+Real-time event and ticket data through one REST API. Fetch live listings, prices, fees and seat-level inventory for any public event on ten primary and secondary marketplaces, and get clean JSON back in seconds.
 
----
+[Website](https://ticketsdata.com) · [Docs](https://ticketsdata.com/docs) · [Pricing](https://ticketsdata.com/pricing) · [Supported marketplaces](https://ticketsdata.com/marketplaces) · [MCP server](https://github.com/ticketsdata/ticketsdata-mcp)
 
-## 🚀 Why use this instead of the official Ticketmaster API?
-
-| Feature | Official Ticketmaster API | TicketsData API |
-|---------|---------------------------|-----------------|
-| Rate Limits | ✅ Strict (can block at scale) | 🚀 High-volume friendly |
-| CAPTCHAs | ❌ Can trigger frequently | ✅ No CAPTCHAs |
-| Seat-level Inventory | ❌ Limited | ✅ Full seat-level inventory |
-| Multi-platform Data | ❌ Ticketmaster only | ✅ Ticketmaster, SeatGeek, StubHub, VividSeats, Eventbrite |
-| Authentication | API Key only | Secure API Key + Token auth |
-| Pricing | Free tier but limited | Simple paid plans, scale as needed |
-
-👉 Learn more at [ticketsdata.com](https://ticketsdata.com)
+> **Unofficial.** TicketsData is an independent data service. It is not affiliated with, endorsed by or sponsored by Ticketmaster or any other marketplace listed here. All marketplace names are trademarks of their respective owners and are used only to identify the data sources the API supports.
 
 ---
 
-## ⚡ Quick API Example
+## Why TicketsData
 
-### cURL
+- **Live data, no cache.** Every request goes to the marketplace in real time. Typical responses take 1 to 2 seconds, and some marketplaces respond in under a second.
+- **One API, many sources.** The same request format works across Ticketmaster, StubHub, SeatGeek, Vivid Seats, Gametime, TickPick, viagogo, DICE, Eventbrite and AXS.
+- **Full listings, no pagination.** All pages of an event are merged into one response.
+- **Seat-level detail.** Section, row, quantity, splits, list price, fees and all-in price, plus primary or resale inventory type.
+- **Cross-market reports.** Match one event across marketplaces and compare prices, inventory and section-level spreads in a single call.
+- **AI ready.** An official MCP server connects Claude, Cursor and other AI assistants to live ticket data.
+
+## Quick start
+
+1. Create an account at [ticketsdata.com](https://ticketsdata.com). The free trial needs no credit card and includes 25 API credits and 3 match reports.
+2. Use your account email and password to authenticate.
+3. Make your first request:
+
 ```bash
-curl -X GET "https://api.ticketsdata.com/v1/event?url=https://www.ticketmaster.com/some-event-id"   -H "Authorization: Bearer YOUR_API_KEY"
+curl -G "https://ticketsdata.com/fetch" \
+  --data-urlencode "username=$TD_USERNAME" \
+  --data-urlencode "password=$TD_PASSWORD" \
+  --data-urlencode "platform=ticketmaster" \
+  --data-urlencode "event_url=https://www.ticketmaster.com/event/160062583FD9756B"
 ```
+
+Keep your credentials in environment variables and always use HTTPS.
+
+## Authentication
+
+Every request takes two query parameters:
+
+| Parameter | Value |
+|---|---|
+| `username` | Your TicketsData account email |
+| `password` | Your TicketsData account password |
+
+## Endpoints
+
+Base URL: `https://ticketsdata.com`
+
+### `GET /fetch`: live listings for one event
+
+| Parameter | Required | Description |
+|---|---|---|
+| `platform` | yes | `ticketmaster`, `stubhub`, `seatgeek`, `vividseats`, `gametime`, `tickpick`, `viagogo`, `dice`, `eventbrite`, `axs` |
+| `event_url` | yes | Full event URL (event ID for Gametime and DICE) |
+| `mode` | no | Ticketmaster: `availability`, `pricing`, `quickpicks`. Gametime: `all`, `qty=N` |
+
+Cost: 1 API credit.
+
+### `GET /events`: all events for a performer, venue or organizer
+
+| Parameter | Required | Description |
+|---|---|---|
+| `platform` | yes | Marketplace name |
+| `performer_url` | yes* | Performer, artist or organizer page URL |
+| `venue_url` | DICE only | `dice.fm/venue/...` or `dice.fm/promoters/...` URL |
+
+Cost: 1 API credit.
+
+### `GET /events?mode=all`: event catalog snapshots
+
+Full or incremental export of stored events with filters such as `country`, `state`, `city`, `q`, `date_from`, `date_to`, `updated_since` and cursor pagination. Available on Pro and above. Call with `help=1` to list every parameter at no cost. See the [docs](https://ticketsdata.com/docs) for details.
+
+### `GET /match`: cross-market report
+
+| Parameter | Required | Description |
+|---|---|---|
+| `event_url` | yes | Event URL from any supported resale marketplace |
+
+Matches the event on other marketplaces and returns per-market summaries, a cross-market snapshot, section spreads and recommendations. Cost: 1 report plus up to 12 API credits. Available on Pro and above.
+
+## Code examples
 
 ### Python
+
 ```python
+import os
 import requests
 
-headers = {
-    "Authorization": "Bearer YOUR_API_KEY"
+params = {
+    "username": os.environ["TD_USERNAME"],
+    "password": os.environ["TD_PASSWORD"],
+    "platform": "ticketmaster",
+    "event_url": "https://www.ticketmaster.com/event/160062583FD9756B",
 }
-url = "https://api.ticketsdata.com/v1/event?url=https://www.ticketmaster.com/some-event-id"
 
-response = requests.get(url, headers=headers)
-print(response.json())
+r = requests.get("https://ticketsdata.com/fetch", params=params, timeout=60)
+r.raise_for_status()
+data = r.json()
+
+print(data["status"], data["platform"], f'{data["response_s"]}s')
+print("Credits left:", data["quota_remaining"])
 ```
 
-### Node.js
+### Node.js (18+)
+
 ```javascript
-import fetch from "node-fetch";
+const params = new URLSearchParams({
+  username: process.env.TD_USERNAME,
+  password: process.env.TD_PASSWORD,
+  platform: "ticketmaster",
+  event_url: "https://www.ticketmaster.com/event/160062583FD9756B",
+});
 
-const url = "https://api.ticketsdata.com/v1/event?url=https://www.ticketmaster.com/some-event-id";
-const headers = { "Authorization": "Bearer YOUR_API_KEY" };
-
-const res = await fetch(url, { headers });
+const res = await fetch(`https://ticketsdata.com/fetch?${params}`);
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
 const data = await res.json();
-console.log(data);
+
+console.log(data.status, data.platform, `${data.response_s}s`);
+console.log("Credits left:", data.quota_remaining);
 ```
 
----
+More examples: [`python_example.py`](python_example.py), [`node_example.js`](node_example.js), [`curl_example.sh`](curl_example.sh).
 
-## 📊 Live Ticket Data Example
-Here’s a **realistic Ticketmaster event response** (demo only):
+## Response format
+
+Every `/fetch` response uses the same envelope. The `body` contains the marketplace's listing data.
 
 ```json
 {
   "status": 200,
+  "platform": "ticketmaster",
   "body": {
-    "meta": {
-      "modified": "2025-09-26T11:01:22.698333450Z",
-      "expires": "2025-09-26T11:02:22.698333450Z"
-    },
-    "eventId": "160062583FD9756B",
-    "facets": [
-      {
-        "available": true,
-        "description": "IE5DMLBY",
-        "inventoryTypes": ["resale"],
-        "offerTypes": ["standard"],
-        "offers": ["GN6DSMBRGQ2TMNRVHB6DCNBUGI3TGNBTGU2Q"],
-        "section": "101",
-        "count": 2,
-        "places": ["GEYDCOSSHIYT[C,E]"],
-        "placeGroups": ["GF6DCNQ"]
-      },
-      {
-        "available": true,
-        "description": "IE5DMLBY",
-        "inventoryTypes": ["resale"],
-        "offerTypes": ["standard"],
-        "offers": ["GN6DSMBQGIZDINJRGV6DCNBUGQ4DQODDHA2Q"],
-        "section": "101",
-        "count": 2,
-        "places": ["GEYDCOSTHIYT[C,E]"],
-        "placeGroups": ["GF6DCNQ"]
-      }
-      // … more facets omitted
-    ]
-  }
+    "_embedded": {
+      "offer": [
+        {
+          "offerId": "...",
+          "section": "605",
+          "row": "-",
+          "listPrice": "380.00",
+          "totalPrice": 459.80,
+          "inventoryType": "resale",
+          "sellableQuantities": [1, 2, 3, 4]
+        }
+      ]
+    }
+  },
+  "response_s": 2.14,
+  "quota_remaining": 117382
 }
 ```
 
+## Errors
+
+| HTTP | Code | Meaning |
+|---|---|---|
+| 400 | `invalid_url` | Malformed or unrecognized event URL |
+| 400 | `performer_not_found` | Performer page not found |
+| 401 | | Invalid credentials |
+| 402 | `quota_exceeded` | Monthly credits used up |
+| 403 | `plan_restriction` | Feature not in your plan (credit refunded) |
+| 404 | `event_not_found` | Event removed or no longer exists |
+| 429 | | Too many requests |
+| 503 | `service_unavailable` | Marketplace temporarily unavailable |
+| 504 | `timeout` | Request timed out |
+
+Retry `503` and `504` up to two times (wait 1.5 s, then 3 s). Other errors are deterministic, so don't retry them.
+
+## Limits
+
+- `/fetch` and `/events` cost 1 API credit each. Credits reset every billing month and don't roll over.
+- Shared plans allow 5 to 15 concurrent requests.
+- Dedicated plans are available for high volumes. [Contact sales](https://ticketsdata.com/contact?topic=dedicated).
+
+## MCP server
+
+Connect AI assistants to live ticket data with the official [TicketsData MCP server](https://github.com/ticketsdata/ticketsdata-mcp).
+
+## Use cases
+
+- Ticket brokers: live pricing and inventory across marketplaces
+- Analytics teams: market and demand research
+- Developers: price comparison, alert and event discovery apps
+- AI agents: real-time ticket data through MCP
+
+## Support
+
+- Docs: [ticketsdata.com/docs](https://ticketsdata.com/docs)
+- FAQ: [ticketsdata.com/faq](https://ticketsdata.com/faq)
+- Email: info@ticketsdata.com
+
+## License
+
+The code examples in this repository are released under the [MIT License](LICENSE). Use of the TicketsData API is governed by the [TicketsData Terms of Service](https://ticketsdata.com/legal/terms).
+
 ---
 
-## 🛠️ What this means
-- **eventId** → Ticketmaster’s internal event ID  
-- **facets** → Seat/section-level availability data  
-- **inventoryTypes** → `resale` / `primary`  
-- **offers** → Encoded Ticketmaster offers  
-- **places / placeGroups** → Venue seat mapping  
-
-👉 With **TicketsData API**, you don’t just get this raw structure — you also get it **cleaned, normalized, and enriched** so you can build apps faster.  
-
----
-
-## 📦 Platforms Supported
-- Ticketmaster 🎟️  
-- SeatGeek  
-- StubHub  
-- VividSeats  
-- Eventbrite  
-
----
-
-## 🔑 Getting Started
-
-1. **Sign up** at [ticketsdata.com](https://ticketsdata.com)  
-2. **Choose your plan and subscribe** → Starter, Pro, Business, or Enterprise  
-3. **Get your API key** instantly from your dashboard  
-4. **Make your first request in under 60 seconds**
-
----
-
-## 📚 Resources
-- [TicketsData Docs](https://ticketsdata.com/docs)  
-- [Pricing Plans](https://ticketsdata.com/pricing)  
-- [FAQ](https://ticketsdata.com/faq)  
-
----
-
-## 📝 License
-MIT License – feel free to use the examples here.
+TicketsData™ and the TD logo are trade marks of TicketsData Ltd, registered in England and Wales (company no. 17150266). [ticketsdata.com](https://ticketsdata.com) is the only official TicketsData website.
