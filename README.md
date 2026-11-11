@@ -2,7 +2,7 @@
 
 Real-time event and ticket data through one REST API. Fetch live listings, prices, fees and seat-level inventory for any public event on ten primary and secondary marketplaces, and get clean JSON back in seconds.
 
-[Website](https://ticketsdata.com) · [Docs](https://ticketsdata.com/docs) · [Pricing](https://ticketsdata.com/pricing) · [Supported marketplaces](https://ticketsdata.com/marketplaces) · [MCP server](https://github.com/ticketsdata/ticketsdata-mcp)
+[Website](https://ticketsdata.com) · [Docs](https://ticketsdata.com/docs) · [Postman Docs](https://documenter.getpostman.com/view/60126198/2sBYHaNGXz) · [Pricing](https://ticketsdata.com/pricing) · [Supported marketplaces](https://ticketsdata.com/marketplaces) · [MCP server](https://github.com/ticketsdata/ticketsdata-mcp)
 
 > **Unofficial.** TicketsData is an independent data service. It is not affiliated with, endorsed by or sponsored by Ticketmaster or any other marketplace listed here. All marketplace names are trademarks of their respective owners and are used only to identify the data sources the API supports.
 
@@ -32,6 +32,8 @@ curl -G "https://ticketsdata.com/fetch" \
 ```
 
 Keep your credentials in environment variables and always use HTTPS.
+
+**Prefer Postman?** Open the official [TicketsData API collection](https://documenter.getpostman.com/view/60126198/2sBYHaNGXz), fork it from the [TicketsData workspace](https://www.postman.com/ticketsdata), set the `username` and `password` variables to your account email and password, and run any endpoint.
 
 ## Authentication
 
@@ -119,7 +121,7 @@ console.log(data.status, data.platform, `${data.response_s}s`);
 console.log("Credits left:", data.quota_remaining);
 ```
 
-More examples: [`python_example.py`](python_example.py), [`node_example.js`](node_example.js), [`curl_example.sh`](curl_example.sh).
+More examples: [`python_example.py`](python_example.py), [`node_example.js`](node_example.js), [`curl_example.sh`](curl_example.sh), and the [Postman collection](https://documenter.getpostman.com/view/60126198/2sBYHaNGXz).
 
 ## Response format
 
@@ -185,6 +187,7 @@ Connect AI assistants to live ticket data with the official [TicketsData MCP ser
 ## Support
 
 - Docs: [ticketsdata.com/docs](https://ticketsdata.com/docs)
+- Postman: [TicketsData API collection](https://documenter.getpostman.com/view/60126198/2sBYHaNGXz) · [workspace](https://www.postman.com/ticketsdata)
 - FAQ: [ticketsdata.com/faq](https://ticketsdata.com/faq)
 - Email: info@ticketsdata.com
 
